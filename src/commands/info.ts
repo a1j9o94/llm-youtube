@@ -7,8 +7,17 @@ import { createSpinner, printError } from "../utils/progress.ts";
 export function registerInfoCommand(program: Command): void {
   program
     .command("info")
-    .description("Quick metadata lookup for a YouTube video")
-    .requiredOption("-v, --video <id>", "YouTube video ID or URL")
+    .description(
+      `Fetch video metadata without downloading. Returns title, channel, duration, upload date,
+  view count, available subtitle languages, and chapter list.
+
+  Use this to check a video exists and discover available languages before calling other commands.
+
+  Examples:
+    llm-youtube info -v dQw4w9WgXcQ
+    llm-youtube info -v https://www.youtube.com/watch?v=dQw4w9WgXcQ`
+    )
+    .requiredOption("-v, --video <id>", "YouTube video ID or full URL")
     .action(async (opts: { video: string }) => {
       try {
         const { id } = parseVideoId(opts.video);

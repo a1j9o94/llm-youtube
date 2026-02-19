@@ -13,16 +13,31 @@ import type { FrameMethod } from "../types/frame.ts";
 export function registerFramesCommand(program: Command): void {
   program
     .command("frames")
-    .description("Extract frames from a YouTube video (no LLM call)")
-    .requiredOption("-v, --video <id>", "YouTube video ID or URL")
-    .option("-o, --output <dir>", "Output directory for frames", "./frames")
-    .option("-m, --method <method>", "Frame selection method", "scene")
-    .option("-i, --interval <seconds>", "Seconds between frames", "10")
-    .option("--scene-threshold <threshold>", "Scene detection sensitivity", "0.3")
-    .option("--max-frames <count>", "Cap frame count")
-    .option("-f, --format <format>", "Output format: png, jpg, webp", "png")
-    .option("-q, --quality <quality>", "Image quality 1-100 (jpg/webp)", "85")
-    .option("--max-resolution <height>", "Max height in pixels", "1080")
+    .description(
+      `Download a YouTube video and extract key frames to disk. No LLM call.
+
+  Frame selection methods:
+    scene     - Detect visual scene changes (best for slides/presentations)
+    interval  - Fixed interval every N seconds (predictable, uniform)
+    keyframe  - I-frames only (fastest, no re-encoding)
+    hybrid    - Scene detection + transcript topic segmentation (best overall, requires transcript)
+
+  Output filenames: frame_000_04m32s.png, frame_001_05m10s.png, etc.
+
+  Examples:
+    llm-youtube frames -v dQw4w9WgXcQ --method scene -o ./frames/
+    llm-youtube frames -v dQw4w9WgXcQ --method interval --interval 30 --max-frames 10
+    llm-youtube frames -v dQw4w9WgXcQ -f jpg -q 80 -o ./output/`
+    )
+    .requiredOption("-v, --video <id>", "YouTube video ID or full URL")
+    .option("-o, --output <dir>", "Output directory for frame images (default: ./frames)", "./frames")
+    .option("-m, --method <method>", "Frame selection: scene|interval|keyframe|hybrid (default: scene)", "scene")
+    .option("-i, --interval <seconds>", "Seconds between frames when method=interval (default: 10)", "10")
+    .option("--scene-threshold <threshold>", "Scene sensitivity 0.0-1.0, lower=more frames (default: 0.3)", "0.3")
+    .option("--max-frames <count>", "Maximum number of frames to extract")
+    .option("-f, --format <format>", "Image format: png|jpg|webp (default: png)", "png")
+    .option("-q, --quality <quality>", "Image quality 1-100 for jpg/webp (default: 85)", "85")
+    .option("--max-resolution <height>", "Max frame height in pixels (default: 1080)", "1080")
     .action(async (opts: FramesOptions) => {
       try {
         const { id } = parseVideoId(opts.video);

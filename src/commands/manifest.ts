@@ -17,18 +17,32 @@ import type { FrameMethod } from "../types/frame.ts";
 export function registerManifestCommand(program: Command): void {
   program
     .command("manifest")
-    .description("Generate a structured JSON manifest mapping frames to transcript")
-    .requiredOption("-v, --video <id>", "YouTube video ID or URL")
-    .option("--visual", "Include visual frames in manifest", false)
-    .option("-o, --output <path>", "Output path for manifest JSON (stdout if omitted)")
-    .option("--include-frames", "Include base64 frame data in manifest", true)
-    .option("--frame-dir <dir>", "Save frames to dir and reference paths in manifest")
-    .option("-m, --method <method>", "Frame selection method", "hybrid")
-    .option("-i, --interval <seconds>", "Seconds between frames", "10")
-    .option("--scene-threshold <threshold>", "Scene detection sensitivity", "0.3")
-    .option("--max-frames <count>", "Cap frame count", "50")
-    .option("-l, --lang <code>", "Transcript language code", "en")
-    .option("--no-cache", "Skip cache")
+    .description(
+      `Generate a structured JSON manifest that maps visual frames to transcript segments.
+  This is the alignment artifact — the core output for downstream LLM processing.
+
+  Without --visual: transcript-only manifest (segments with text, no frames).
+  With --visual: downloads video, extracts frames, and aligns them to transcript segments.
+
+  Manifest structure: {version, videoId, videoTitle, duration, segments: [{startTime, endTime,
+  transcript, chapterTitle?, frames: [{timestamp, base64?, filePath?}]}], metadata}
+
+  Examples:
+    llm-youtube manifest -v dQw4w9WgXcQ -o context.json
+    llm-youtube manifest -v dQw4w9WgXcQ --visual -o manifest.json
+    llm-youtube manifest -v dQw4w9WgXcQ --visual --frame-dir ./frames/ -o manifest.json`
+    )
+    .requiredOption("-v, --video <id>", "YouTube video ID or full URL")
+    .option("--visual", "Download video + extract frames + include in manifest", false)
+    .option("-o, --output <path>", "Output file path for manifest JSON (prints to stdout if omitted)")
+    .option("--include-frames", "Embed base64 frame data in manifest JSON (default: true)", true)
+    .option("--frame-dir <dir>", "Save frame images to this directory and reference file paths in manifest")
+    .option("-m, --method <method>", "Frame extraction: scene|interval|keyframe|hybrid (default: hybrid)", "hybrid")
+    .option("-i, --interval <seconds>", "Seconds between frames when method=interval (default: 10)", "10")
+    .option("--scene-threshold <threshold>", "Scene sensitivity 0.0-1.0 (default: 0.3)", "0.3")
+    .option("--max-frames <count>", "Max frames to include (default: 50)", "50")
+    .option("-l, --lang <code>", "Transcript language code (default: en)", "en")
+    .option("--no-cache", "Bypass cache and re-fetch everything")
     .action(async (opts: ManifestOptions & { cache?: boolean }) => {
       try {
         const { id } = parseVideoId(opts.video);

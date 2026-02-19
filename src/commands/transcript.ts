@@ -8,13 +8,25 @@ import type { TranscriptCommandOptions } from "../types/options.ts";
 export function registerTranscriptCommand(program: Command): void {
   program
     .command("transcript")
-    .description("Dump the raw transcript of a YouTube video")
-    .requiredOption("-v, --video <id>", "YouTube video ID or URL")
-    .option("-t, --timestamps", "Include timestamps", true)
-    .option("-l, --lang <code>", "Transcript language code", "en")
-    .option("--json", "Output as JSON array", false)
-    .option("--chapters", "Group by video chapters if available", false)
-    .option("--no-cache", "Skip cache")
+    .description(
+      `Fetch and display the transcript of a YouTube video. No LLM call, no video download.
+
+  Default output: timestamped text lines to stdout (one segment per line).
+  Use --json to get a structured array of {text, startTime, endTime, duration} objects.
+  Use --chapters to group output by YouTube chapter boundaries (if the video has them).
+
+  Examples:
+    llm-youtube transcript -v dQw4w9WgXcQ
+    llm-youtube transcript -v dQw4w9WgXcQ --json
+    llm-youtube transcript -v dQw4w9WgXcQ --json --chapters
+    llm-youtube transcript -v dQw4w9WgXcQ --no-timestamps`
+    )
+    .requiredOption("-v, --video <id>", "YouTube video ID or full URL")
+    .option("-t, --timestamps", "Prefix each line with [M:SS] timestamp (default: true)", true)
+    .option("-l, --lang <code>", "Transcript language code (default: en)", "en")
+    .option("--json", "Output as JSON array of TranscriptSegment objects", false)
+    .option("--chapters", "Group segments by YouTube chapter boundaries", false)
+    .option("--no-cache", "Bypass cache and re-fetch from YouTube")
     .action(async (opts: TranscriptCommandOptions & { cache?: boolean }) => {
       try {
         const { id } = parseVideoId(opts.video);

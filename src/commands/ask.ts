@@ -24,21 +24,35 @@ import type { FrameMethod } from "../types/frame.ts";
 export function registerAskCommand(program: Command): void {
   program
     .command("ask")
-    .description("Ask a question about a YouTube video")
-    .argument("<question>", "The question to ask about the video")
-    .requiredOption("-v, --video <id>", "YouTube video ID or URL")
-    .option("--visual", "Enable frame extraction + vision analysis", false)
-    .option("-m, --method <method>", "Frame selection method", "hybrid")
-    .option("-i, --interval <seconds>", "Seconds between frames (interval method)", "10")
-    .option("--scene-threshold <threshold>", "Scene change sensitivity 0.0-1.0", "0.3")
-    .option("--max-frames <count>", "Hard cap on frames sent to LLM", "50")
-    .option("--around <timestamp>", "Focus on timestamp range (e.g., 5:00 or 1:00-3:00)")
-    .option("-l, --lang <code>", "Transcript language code", "en")
-    .option("--model <model>", "Override Claude model")
-    .option("-s, --system <prompt>", "Additional system prompt context")
-    .option("--json", "Output structured JSON", false)
-    .option("--no-cache", "Skip cache", false)
-    .option("--verbose", "Show progress details", false)
+    .description(
+      `Ask Claude a question about a YouTube video using its transcript and optionally visual frames.
+
+  By default, fetches the transcript and sends it to Claude with your question (fast, cheap).
+  Add --visual to also download the video, extract key frames, and include them in the query.
+
+  Examples:
+    llm-youtube ask "Summarize the key arguments" -v dQw4w9WgXcQ
+    llm-youtube ask "What charts are shown?" -v dQw4w9WgXcQ --visual
+    llm-youtube ask "What code is on screen?" -v abc123 --visual --around 5:00-8:00
+    llm-youtube ask "List all products mentioned" -v abc123 --json
+
+  Output: Streams the LLM response to stdout. Progress/status goes to stderr.
+  Footer shows: frame count, segment count, wall time, and cost estimate.`
+    )
+    .argument("<question>", "Natural language question about the video content")
+    .requiredOption("-v, --video <id>", "YouTube video ID or full URL (all formats accepted)")
+    .option("--visual", "Download video + extract frames + use Claude vision (slower, richer)", false)
+    .option("-m, --method <method>", "Frame extraction method: scene|interval|keyframe|hybrid (default: hybrid)")
+    .option("-i, --interval <seconds>", "Seconds between frames when method=interval (default: 10)", "10")
+    .option("--scene-threshold <threshold>", "Scene detection sensitivity 0.0-1.0, lower=more frames (default: 0.3)", "0.3")
+    .option("--max-frames <count>", "Max frames sent to Claude. More frames = higher cost (default: 50)", "50")
+    .option("--around <timestamp>", "Focus on a time range. Accepts '5:00' (±2.5min window) or '1:00-3:00' (exact range)")
+    .option("-l, --lang <code>", "Transcript language code (default: en)", "en")
+    .option("--model <model>", "Override Claude model (default: claude-sonnet-4-5-20250929)")
+    .option("-s, --system <prompt>", "Prepend additional context to the system prompt")
+    .option("--json", "Buffer response and output as JSON: {answer, model, inputTokens, outputTokens, costEstimate}", false)
+    .option("--no-cache", "Bypass transcript/frame cache and re-fetch everything", false)
+    .option("--verbose", "Show detailed progress for each pipeline step", false)
     .action(async (question: string, opts: AskOptions) => {
       const startTime = performance.now();
 
