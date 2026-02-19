@@ -1,12 +1,29 @@
 {
   "name": "llm-youtube",
-  "module": "index.ts",
+  "version": "0.1.0",
+  "description": "CLI tool to ask LLMs questions about YouTube videos using transcripts and visual frames",
+  "module": "src/index.ts",
   "type": "module",
-  "private": true,
+  "bin": {
+    "llm-youtube": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "bun src/index.ts",
+    "test": "bun test",
+    "validate": "RUN_VALIDATION=true bun test tests/validation/"
+  },
+  "private": false,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/cli-progress": "^3.11.6"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.77.0",
+    "cli-progress": "^3.12.0",
+    "commander": "^14.0.3",
+    "ora": "^9.3.0"
   }
 }

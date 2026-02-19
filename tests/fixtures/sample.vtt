@@ -1,0 +1,27 @@
+WEBVTT
+Kind: captions
+Language: en
+
+00:00:00.000 --> 00:00:04.500
+Welcome everyone to today's presentation on machine learning.
+
+00:00:04.500 --> 00:00:07.200
+I'm going to cover three main topics today.
+
+00:00:07.200 --> 00:00:11.000
+First, we'll look at the fundamentals of neural networks.
+
+00:00:11.000 --> 00:00:14.500
+Then we'll dive into convolutional architectures.
+
+00:00:14.500 --> 00:00:18.000
+And finally, we'll discuss transformer models.
+
+00:00:18.000 --> 00:00:20.500
+So let's start with the basics.
+
+00:00:20.500 --> 00:00:25.000
+A neural network is composed of layers of neurons.
+
+00:00:25.000 --> 00:00:30.000
+Each neuron takes inputs, applies weights, and produces an output.

@@ -1,0 +1,91 @@
+{
+  "version": "1.0.0",
+  "videoId": "test123abcde",
+  "videoTitle": "Introduction to Machine Learning",
+  "videoUrl": "https://www.youtube.com/watch?v=test123abcde",
+  "channelName": "ML Channel",
+  "duration": 152,
+  "language": "en",
+  "generatedAt": "2026-02-19T12:00:00.000Z",
+  "extractionMethod": "hybrid",
+  "segments": [
+    {
+      "index": 0,
+      "startTime": 0,
+      "endTime": 60,
+      "startFormatted": "0:00",
+      "endFormatted": "1:00",
+      "transcript": "Welcome everyone to today's presentation on machine learning. I'm going to cover three main topics today. First, we'll look at the fundamentals of neural networks. Then we'll dive into convolutional architectures. And finally, we'll discuss transformer models. So let's start with the basics. A neural network is composed of layers of neurons. Each neuron takes inputs, applies weights, and produces an output. The key innovation was backpropagation. This allows the network to learn from its mistakes. Let me show you a diagram of a simple network. Here you can see the input layer, hidden layers, and output layer.",
+      "chapterTitle": "Neural Network Basics",
+      "frames": [
+        {
+          "index": 0,
+          "timestamp": 5,
+          "timestampFormatted": "0:05",
+          "filePath": "frames/frame_000_00m05s.png",
+          "width": 1920,
+          "height": 1080,
+          "method": "hybrid"
+        },
+        {
+          "index": 1,
+          "timestamp": 38,
+          "timestampFormatted": "0:38",
+          "filePath": "frames/frame_001_00m38s.png",
+          "width": 1920,
+          "height": 1080,
+          "method": "hybrid",
+          "sceneChangeScore": 0.85
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "startTime": 60,
+      "endTime": 120,
+      "startFormatted": "1:00",
+      "endFormatted": "2:00",
+      "transcript": "Now let's move on to convolutional neural networks. CNNs are especially good at processing images. They use filters that slide across the input. Each filter detects a specific feature. Here's an example of edge detection. The filter highlights boundaries in the image. Pooling layers reduce the spatial dimensions. This makes the network more efficient.",
+      "chapterTitle": "Convolutional Networks",
+      "frames": [
+        {
+          "index": 2,
+          "timestamp": 62,
+          "timestampFormatted": "1:02",
+          "filePath": "frames/frame_002_01m02s.png",
+          "width": 1920,
+          "height": 1080,
+          "method": "hybrid",
+          "sceneChangeScore": 0.92
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "startTime": 120,
+      "endTime": 152,
+      "startFormatted": "2:00",
+      "endFormatted": "2:32",
+      "transcript": "Finally, let's talk about transformers. Transformers use a mechanism called self-attention. This allows the model to focus on relevant parts of the input. The original transformer paper was called Attention Is All You Need. It revolutionized natural language processing. Models like GPT and BERT are based on this architecture. And that concludes our overview. Thank you for watching.",
+      "chapterTitle": "Transformer Models",
+      "frames": [
+        {
+          "index": 3,
+          "timestamp": 122,
+          "timestampFormatted": "2:02",
+          "filePath": "frames/frame_003_02m02s.png",
+          "width": 1920,
+          "height": 1080,
+          "method": "hybrid",
+          "sceneChangeScore": 0.78
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "totalFrames": 4,
+    "totalSegments": 3,
+    "transcriptTokenEstimate": 280,
+    "hasChapters": true
+  }
+}
