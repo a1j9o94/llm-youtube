@@ -1,6 +1,6 @@
 # llm-youtube
 
-CLI tool that lets you point at a YouTube video and ask an LLM questions about its content — both what was said (transcript) and what was shown (visual frames).
+CLI tool that lets you point at a YouTube or Loom video and ask an LLM questions about its content — both what was said (transcript) and what was shown (visual frames).
 
 The core differentiator is **temporal alignment**: mapping frames to transcript segments so the LLM gets structured, queryable context instead of raw dumps.
 
@@ -37,6 +37,12 @@ bun src/index.ts frames -v dQw4w9WgXcQ --method scene -o ./frames/
 
 # Generate structured manifest (the alignment artifact)
 bun src/index.ts manifest -v dQw4w9WgXcQ --visual -o ./manifest.json
+
+# Analyze a Loom recording (with local transcript file)
+bun src/index.ts ask "Summarize this" -v https://www.loom.com/share/abc123... --transcript-file captions.vtt
+
+# Loom with visual mode (no transcript needed)
+bun src/index.ts ask "What's shown?" -v https://www.loom.com/share/abc123... --visual
 ```
 
 ## Commands
@@ -51,7 +57,8 @@ llm-youtube ask "What code is shown at 5 min?" -v <video> --visual --around 5:00
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `-v, --video` | required | YouTube video ID or URL |
+| `-v, --video` | required | YouTube video ID/URL or Loom share URL |
+| `--transcript-file` | — | Path to local VTT/SRT file (fallback for Loom) |
 | `--visual` | false | Enable frame extraction + vision |
 | `-m, --method` | hybrid | Frame method: scene, interval, keyframe, hybrid |
 | `-i, --interval` | 10 | Seconds between frames (interval method) |
@@ -87,6 +94,15 @@ llm-youtube manifest -v <video> --visual -o ./manifest.json
 ```bash
 llm-youtube info -v <video>
 ```
+
+## Supported Platforms
+
+| Platform | Video ID/URL | Transcript | Visual Frames |
+|----------|-------------|------------|---------------|
+| **YouTube** | ID, full URL, short URL, embed, shorts | Auto via yt-dlp | Auto via yt-dlp |
+| **Loom** | Share URL, embed URL | Use `--transcript-file` (yt-dlp may not extract Loom captions) | Auto via yt-dlp |
+
+For Loom videos where transcript extraction fails, you can download the transcript from Loom's web interface and pass it via `--transcript-file captions.vtt`. Visual mode (`--visual`) works without a transcript.
 
 ## Frame Extraction Methods
 
@@ -128,13 +144,13 @@ src/
 ├── index.ts              # CLI entry (commander)
 ├── commands/             # Subcommand handlers
 ├── core/
-│   ├── transcript.ts     # YouTube transcript via yt-dlp
+│   ├── transcript.ts     # Transcript via yt-dlp (YouTube/Loom) + local VTT/SRT
 │   ├── downloader.ts     # Video download via yt-dlp
 │   ├── frames/           # 4 extraction methods + orchestrator
 │   ├── alignment.ts      # Frame-transcript temporal alignment
 │   ├── llm.ts            # Anthropic API client
 │   └── manifest.ts       # Manifest generation
-├── utils/                # Cache, config, video-id parser, etc.
+├── utils/                # Cache, config, video-source parser, etc.
 └── types/                # TypeScript type definitions
 ```
 
