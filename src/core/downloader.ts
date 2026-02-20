@@ -1,6 +1,7 @@
 import { $ } from "bun";
 import { join } from "node:path";
 import { mkdir } from "node:fs/promises";
+import type { VideoSource } from "../utils/video-source.ts";
 import { Cache } from "../utils/cache.ts";
 
 export interface DownloadOptions {
@@ -17,18 +18,19 @@ export interface DownloadResult {
 }
 
 /**
- * Download a YouTube video via yt-dlp. Returns cached path if available.
+ * Download a video via yt-dlp. Returns cached path if available.
  */
 export async function downloadVideo(
-  videoId: string,
+  source: VideoSource,
   options: DownloadOptions = {}
 ): Promise<DownloadResult> {
   const cache = new Cache();
   const maxRes = options.maxResolution ?? 1080;
+  const cacheKey = `${source.platform}_${source.id}`;
 
   // Check cache
   if (!options.timestampRange) {
-    const cached = await cache.getVideoFile(videoId);
+    const cached = await cache.getVideoFile(cacheKey);
     if (cached) {
       const file = Bun.file(cached);
       return {
@@ -41,9 +43,8 @@ export async function downloadVideo(
 
   const outputDir = options.outputPath ?? cache.getVideoDir();
   await mkdir(outputDir, { recursive: true });
-  const outputPath = join(outputDir, `${videoId}.mp4`);
+  const outputPath = join(outputDir, `${cacheKey}.mp4`);
 
-  const url = `https://www.youtube.com/watch?v=${videoId}`;
   const format = `bestvideo[height<=${maxRes}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${maxRes}][ext=mp4]/best`;
 
   const args: string[] = [
@@ -64,7 +65,7 @@ export async function downloadVideo(
     );
   }
 
-  args.push(url);
+  args.push(source.url);
 
   const proc = Bun.spawn(["yt-dlp", ...args], {
     stdout: "pipe",

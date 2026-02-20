@@ -35,4 +35,6 @@ export interface VideoInfo {
   languages: string[];
   chapters: Chapter[];
   thumbnailUrl?: string;
+  url: string;
+  platform: string;
 }

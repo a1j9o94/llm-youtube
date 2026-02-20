@@ -78,7 +78,7 @@ export async function generateManifest(
     version: "1.0.0",
     videoId: videoInfo.id,
     videoTitle: videoInfo.title,
-    videoUrl: `https://www.youtube.com/watch?v=${videoInfo.id}`,
+    videoUrl: videoInfo.url,
     channelName: videoInfo.channel,
     duration: videoInfo.duration,
     language,

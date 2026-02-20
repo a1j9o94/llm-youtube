@@ -2,9 +2,9 @@ import type { Command } from "commander";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdir, rm } from "node:fs/promises";
-import { parseVideoId } from "../utils/video-id.ts";
+import { parseVideoSource } from "../utils/video-source.ts";
 import { parseTimestamp, type TimestampRange } from "../utils/timestamp.ts";
-import { fetchTranscript, fetchVideoInfo } from "../core/transcript.ts";
+import { fetchTranscript, fetchVideoInfo, loadTranscriptFile } from "../core/transcript.ts";
 import { queryLlm } from "../core/llm.ts";
 import { downloadVideo } from "../core/downloader.ts";
 import { extractFrames } from "../core/frames/extractor.ts";
@@ -25,7 +25,7 @@ export function registerAskCommand(program: Command): void {
   program
     .command("ask")
     .description(
-      `Ask Claude a question about a YouTube video using its transcript and optionally visual frames.
+      `Ask Claude a question about a video using its transcript and optionally visual frames.
 
   By default, fetches the transcript and sends it to Claude with your question (fast, cheap).
   Add --visual to also download the video, extract key frames, and include them in the query.
@@ -35,13 +35,15 @@ export function registerAskCommand(program: Command): void {
     llm-youtube ask "What charts are shown?" -v dQw4w9WgXcQ --visual
     llm-youtube ask "What code is on screen?" -v abc123 --visual --around 5:00-8:00
     llm-youtube ask "List all products mentioned" -v abc123 --json
+    llm-youtube ask "Summarize" -v https://www.loom.com/share/abc123... --transcript-file captions.vtt
 
   Output: Streams the LLM response to stdout. Progress/status goes to stderr.
   Footer shows: frame count, segment count, wall time, and cost estimate.`
     )
     .argument("<question>", "Natural language question about the video content")
-    .requiredOption("-v, --video <id>", "YouTube video ID or full URL (all formats accepted)")
+    .requiredOption("-v, --video <id>", "YouTube video ID/URL or Loom share URL")
     .option("--visual", "Download video + extract frames + use Claude vision (slower, richer)", false)
+    .option("--transcript-file <path>", "Path to a local VTT or SRT transcript file (skips yt-dlp transcript fetch)")
     .option("-m, --method <method>", "Frame extraction method: scene|interval|keyframe|hybrid (default: hybrid)")
     .option("-i, --interval <seconds>", "Seconds between frames when method=interval (default: 10)", "10")
     .option("--scene-threshold <threshold>", "Scene detection sensitivity 0.0-1.0, lower=more frames (default: 0.3)", "0.3")
@@ -53,11 +55,11 @@ export function registerAskCommand(program: Command): void {
     .option("--json", "Buffer response and output as JSON: {answer, model, inputTokens, outputTokens, costEstimate}", false)
     .option("--no-cache", "Bypass transcript/frame cache and re-fetch everything", false)
     .option("--verbose", "Show detailed progress for each pipeline step", false)
-    .action(async (question: string, opts: AskOptions) => {
+    .action(async (question: string, opts: AskOptions & { transcriptFile?: string }) => {
       const startTime = performance.now();
 
       try {
-        const { id } = parseVideoId(opts.video);
+        const source = parseVideoSource(opts.video);
 
         // Check dependencies
         if (opts.visual) {
@@ -68,22 +70,31 @@ export function registerAskCommand(program: Command): void {
 
         // Fetch video info
         const infoSpinner = createSpinner("Fetching video info...").start();
-        const info = await fetchVideoInfo(id);
+        const info = await fetchVideoInfo(source);
         infoSpinner.succeed(
           `Video found: "${info.title}" (${formatTimestamp(info.duration)})`
         );
 
         // Fetch transcript
-        const transcriptSpinner = createSpinner(
-          `Fetching transcript (${opts.lang ?? "en"})...`
-        ).start();
-        const transcript = await fetchTranscript(id, {
-          lang: opts.lang,
-          cache: !opts.noCache,
-        });
-        transcriptSpinner.succeed(
-          `Transcript loaded (${transcript.segments.length} segments)`
-        );
+        let transcript;
+        if (opts.transcriptFile) {
+          const tSpinner = createSpinner("Loading transcript file...").start();
+          transcript = await loadTranscriptFile(opts.transcriptFile, `${source.platform}_${source.id}`);
+          tSpinner.succeed(
+            `Transcript loaded from file (${transcript.segments.length} segments)`
+          );
+        } else {
+          const transcriptSpinner = createSpinner(
+            `Fetching transcript (${opts.lang ?? "en"})...`
+          ).start();
+          transcript = await fetchTranscript(source, {
+            lang: opts.lang,
+            cache: !opts.noCache,
+          });
+          transcriptSpinner.succeed(
+            `Transcript loaded (${transcript.segments.length} segments)`
+          );
+        }
 
         // Parse --around timestamp range
         let timestampRange: { start: number; end: number } | undefined;
@@ -108,7 +119,7 @@ export function registerAskCommand(program: Command): void {
         if (opts.visual) {
           // Download video
           const dlSpinner = createSpinner("Downloading video...").start();
-          const download = await downloadVideo(id, {
+          const download = await downloadVideo(source, {
             timestampRange,
             onProgress: (pct) => {
               dlSpinner.text = `Downloading video... ${pct.toFixed(0)}%`;
@@ -125,7 +136,7 @@ export function registerAskCommand(program: Command): void {
 
           const tempFrameDir = join(
             tmpdir(),
-            `llm-youtube-frames-${id}-${Date.now()}`
+            `llm-youtube-frames-${source.platform}_${source.id}-${Date.now()}`
           );
           await mkdir(tempFrameDir, { recursive: true });
 
@@ -177,6 +188,7 @@ export function registerAskCommand(program: Command): void {
           model: opts.model,
           systemPrompt: opts.system,
           jsonOutput: opts.json,
+          platform: source.platform,
           onStream: (chunk) => {
             if (!opts.json) {
               if (llmSpinner.isSpinning) {

@@ -11,10 +11,10 @@ const program = new Command();
 program
   .name("llm-youtube")
   .description(
-    `Extract transcripts, visual frames, and structured context from YouTube videos for LLM analysis.
+    `Extract transcripts, visual frames, and structured context from YouTube and Loom videos for LLM analysis.
 
 OVERVIEW:
-  This CLI fetches a YouTube video's transcript and optionally extracts visual frames,
+  This CLI fetches a video's transcript and optionally extracts visual frames,
   then either queries Claude directly or produces structured artifacts (JSON manifests)
   that other tools can consume. The core value is temporal alignment — mapping what was
   said to what was shown at each moment.
@@ -47,13 +47,18 @@ TYPICAL AGENT WORKFLOWS:
   6. Extract frames for manual inspection:
      llm-youtube frames -v <id> --method scene -o ./frames/
 
+  7. Analyze a Loom recording (with local transcript):
+     llm-youtube ask "Summarize" -v https://www.loom.com/share/abc123... --transcript-file captions.vtt
+
 INPUT FORMATS:
   The -v/--video flag accepts any of these:
-    dQw4w9WgXcQ                                    (raw 11-char ID)
-    https://www.youtube.com/watch?v=dQw4w9WgXcQ    (standard URL)
-    https://youtu.be/dQw4w9WgXcQ                   (short URL)
-    https://www.youtube.com/embed/dQw4w9WgXcQ      (embed URL)
-    https://www.youtube.com/shorts/dQw4w9WgXcQ     (shorts URL)
+    dQw4w9WgXcQ                                              (raw 11-char YouTube ID)
+    https://www.youtube.com/watch?v=dQw4w9WgXcQ              (standard YouTube URL)
+    https://youtu.be/dQw4w9WgXcQ                             (short YouTube URL)
+    https://www.youtube.com/embed/dQw4w9WgXcQ                (embed YouTube URL)
+    https://www.youtube.com/shorts/dQw4w9WgXcQ               (shorts YouTube URL)
+    https://www.loom.com/share/abc123def456abc123def456abc1   (Loom share URL)
+    https://www.loom.com/embed/abc123def456abc123def456abc1   (Loom embed URL)
 
 ENVIRONMENT:
   ANTHROPIC_API_KEY          Required for 'ask' command. Set to your Claude API key.

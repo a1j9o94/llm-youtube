@@ -15,6 +15,7 @@ export interface LlmQueryOptions {
   maxTokens?: number;
   jsonOutput?: boolean;
   onStream?: (chunk: string) => void;
+  platform?: string;
 }
 
 export interface LlmResponse {
@@ -40,17 +41,23 @@ function estimateCost(
   return (inputTokens / 1_000_000) * pricing.input + (outputTokens / 1_000_000) * pricing.output;
 }
 
+function videoTypeLabel(platform?: string): string {
+  return platform === "loom" ? "Loom recording" : "YouTube video";
+}
+
 function buildTranscriptOnlyMessages(
   question: string,
   transcript: TranscriptResult,
-  extraSystem?: string
+  extraSystem?: string,
+  platform?: string
 ): { system: string; userContent: string } {
   const transcriptText = transcript.segments
     .map((s) => `[${formatTimestamp(s.startTime)}] ${s.text}`)
     .join("\n");
 
+  const label = videoTypeLabel(platform);
   const system =
-    `You are analyzing a YouTube video. Below is the transcript with timestamps.\n` +
+    `You are analyzing a ${label}. Below is the transcript with timestamps.\n` +
     `Answer the user's question based on the video content.\n` +
     `If referencing specific moments, include the timestamp.\n` +
     (extraSystem ? `\n${extraSystem}` : "");
@@ -65,10 +72,12 @@ async function buildVisualMessages(
   transcript: TranscriptResult,
   alignment: AlignmentResult,
   frames: ExtractedFrame[],
-  extraSystem?: string
+  extraSystem?: string,
+  platform?: string
 ): Promise<{ system: string; content: Anthropic.MessageParam["content"] }> {
+  const label = videoTypeLabel(platform);
   const system =
-    `You are analyzing a YouTube video using both its transcript and visual frames ` +
+    `You are analyzing a ${label} using both its transcript and visual frames ` +
     `captured at key moments. Each frame is labeled with its timestamp.\n` +
     `Use both the visual and spoken content to answer the user's question.\n` +
     `When referencing specific moments, include the timestamp.\n` +
@@ -143,7 +152,8 @@ export async function queryLlm(options: LlmQueryOptions): Promise<LlmResponse> {
       options.transcript,
       options.alignment,
       options.frames,
-      options.systemPrompt
+      options.systemPrompt,
+      options.platform
     );
     system = result.system;
     userContent = result.content;
@@ -152,7 +162,8 @@ export async function queryLlm(options: LlmQueryOptions): Promise<LlmResponse> {
     const result = buildTranscriptOnlyMessages(
       options.question,
       options.transcript,
-      options.systemPrompt
+      options.systemPrompt,
+      options.platform
     );
     system = result.system;
     userContent = result.userContent;

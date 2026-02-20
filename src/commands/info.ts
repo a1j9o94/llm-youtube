@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import { parseVideoId } from "../utils/video-id.ts";
+import { parseVideoSource } from "../utils/video-source.ts";
 import { fetchVideoInfo } from "../core/transcript.ts";
 import { formatTimestamp } from "../utils/timestamp.ts";
 import { createSpinner, printError } from "../utils/progress.ts";
@@ -15,21 +15,23 @@ export function registerInfoCommand(program: Command): void {
 
   Examples:
     llm-youtube info -v dQw4w9WgXcQ
-    llm-youtube info -v https://www.youtube.com/watch?v=dQw4w9WgXcQ`
+    llm-youtube info -v https://www.youtube.com/watch?v=dQw4w9WgXcQ
+    llm-youtube info -v https://www.loom.com/share/abc123def456abc123def456abc123de`
     )
-    .requiredOption("-v, --video <id>", "YouTube video ID or full URL")
+    .requiredOption("-v, --video <id>", "YouTube video ID/URL or Loom share URL")
     .action(async (opts: { video: string }) => {
       try {
-        const { id } = parseVideoId(opts.video);
+        const source = parseVideoSource(opts.video);
         const spinner = createSpinner("Fetching video info...").start();
 
-        const info = await fetchVideoInfo(id);
+        const info = await fetchVideoInfo(source);
         spinner.succeed(`Video found: "${info.title}" (${formatTimestamp(info.duration)})`);
 
         console.log();
         console.log(`Title:    ${info.title}`);
         console.log(`Channel:  ${info.channel}`);
         console.log(`Duration: ${formatTimestamp(info.duration)}`);
+        console.log(`Platform: ${info.platform}`);
         console.log(`Uploaded: ${info.uploadDate}`);
         console.log(`Views:    ${info.viewCount.toLocaleString()}`);
 

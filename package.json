@@ -1,7 +1,7 @@
 {
   "name": "llm-youtube",
   "version": "0.1.0",
-  "description": "CLI tool to ask LLMs questions about YouTube videos using transcripts and visual frames",
+  "description": "CLI tool to ask LLMs questions about YouTube and Loom videos using transcripts and visual frames",
   "module": "src/index.ts",
   "type": "module",
   "bin": {
